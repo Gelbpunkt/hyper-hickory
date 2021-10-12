@@ -2,6 +2,11 @@
 name = "hyper-trust-dns"
 version = "0.1.0"
 edition = "2021"
+description = "HTTP/HTTPS connectors for hyper that use trust-dns' DNS resolver"
+license = "MIT"
+documentation = "https://docs.rs/hyper-trust-dns"
+homepage = "https://github.com/Gelbpunkt/hyper-trust-dns"
+repository = "https://github.com/Gelbpunkt/hyper-trust-dns"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -34,12 +39,10 @@ http1 = ["hyper/http1"]
 http2 = ["hyper/http2"]
 
 # DNS features
-__dns-over-tls = []
-__dns-over-https = []
-dns-over-openssl = ["trust-dns-resolver/dns-over-openssl", "__dns-over-tls"]
-dns-over-native-tls = ["trust-dns-resolver/dns-over-native-tls", "__dns-over-tls"]
-dns-over-rustls = ["trust-dns-resolver/dns-over-rustls", "__dns-over-tls"]
-dns-over-https-rustls = ["trust-dns-resolver/dns-over-https-rustls", "__dns-over-https"]
+dns-over-openssl = ["trust-dns-resolver/dns-over-openssl"]
+dns-over-native-tls = ["trust-dns-resolver/dns-over-native-tls"]
+dns-over-rustls = ["trust-dns-resolver/dns-over-rustls"]
+dns-over-https-rustls = ["trust-dns-resolver/dns-over-https-rustls"]
 dnssec-openssl = ["trust-dns-resolver/dnssec-openssl"]
 dnssec-ring = ["trust-dns-resolver/dnssec-ring"]
 
