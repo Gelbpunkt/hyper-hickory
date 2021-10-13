@@ -25,9 +25,7 @@ webpki = { version = "0.21", optional = true }
 webpki-roots = { version = "0.21", optional = true }
 
 # Native-TLS
-bytes = { version = "1", optional = true }
-native-tls-crate = { package = "native-tls", version = "0.2", optional = true }
-tokio-native-tls = { version = "0.3", optional = true }
+hyper-tls = { version = "0.5", default-features = false, optional = true }
 
 [dev-dependencies]
 hyper = { version = "0.14", default-features = false, features = ["client", "tcp", "http1"] }
@@ -52,4 +50,4 @@ rustls-webpki = ["__rustls", "webpki", "webpki-roots"]
 rustls-native = ["__rustls", "rustls-native-certs"]
 
 # NativeTlsHttpsConnector options
-native-tls = ["bytes", "native-tls-crate", "tokio-native-tls"]
+native-tls = ["hyper-tls"]

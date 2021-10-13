@@ -21,7 +21,7 @@ use trust_dns_resolver::{
 };
 
 #[cfg(feature = "native-tls")]
-pub use crate::native_tls::HttpsConnector as NativeTlsHttpsConnector;
+pub use crate::native_tls::{new_native_tls_https_connector, NativeTlsHttpsConnector};
 #[cfg(feature = "__rustls")]
 pub use crate::rustls::HttpsConnector as RustlsHttpsConnector;
 
@@ -98,7 +98,7 @@ impl Service<Name> for TrustDnsResolver {
 
 pub type TrustDnsHttpConnector = HttpConnector<TrustDnsResolver>;
 
-/// Create a new [`TrustDnsHttpConnector`] that only support HTTP.
+/// Create a new [`TrustDnsHttpConnector`] that only supports HTTP.
 #[must_use]
 pub fn new_trust_dns_http_connector() -> TrustDnsHttpConnector {
     TrustDnsHttpConnector::new_with_resolver(TrustDnsResolver::new())
@@ -162,7 +162,7 @@ mod tests {
     #[cfg(feature = "native-tls")]
     #[tokio::test]
     async fn test_native_tls_works() {
-        let connector = NativeTlsHttpsConnector::new();
+        let connector = new_native_tls_https_connector();
         let client = Client::builder().build(connector);
 
         let request = Request::builder()
