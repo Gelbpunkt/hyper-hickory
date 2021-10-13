@@ -1,6 +1,6 @@
 [package]
 name = "hyper-trust-dns"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "HTTP/HTTPS connectors for hyper that use trust-dns' DNS resolver"
 license = "MIT"
@@ -18,10 +18,9 @@ trust-dns-resolver = { version = "0.20", default-features = false, features = ["
 
 # Rustls
 ct-logs = { version = "0.8", optional = true }
+hyper-rustls = { version = "0.22", default-features = false, features = ["tokio-runtime"], optional = true }
 rustls = { version = "0.19", optional = true }
 rustls-native-certs = { version = "0.5", optional = true }
-tokio-rustls = { version = "0.22", optional = true }
-webpki = { version = "0.21", optional = true }
 webpki-roots = { version = "0.21", optional = true }
 
 # Native-TLS
@@ -45,9 +44,13 @@ dnssec-openssl = ["trust-dns-resolver/dnssec-openssl"]
 dnssec-ring = ["trust-dns-resolver/dnssec-ring"]
 
 # RustlsHttpsConnector options
-__rustls = ["rustls", "tokio-rustls", "ct-logs"]
-rustls-webpki = ["__rustls", "webpki", "webpki-roots"]
-rustls-native = ["__rustls", "rustls-native-certs"]
+__rustls = ["hyper-rustls", "rustls", "ct-logs"]
+rustls-webpki = ["__rustls", "hyper-rustls/webpki-tokio", "webpki-roots"]
+rustls-native = ["__rustls", "hyper-rustls/native-tokio", "rustls-native-certs"]
 
 # NativeTlsHttpsConnector options
 native-tls = ["hyper-tls"]
+
+[package.metadata.docs.rs]
+features = ["rustls-webpki", "rustls-native", "native-tls"]
+rustdoc-args = ["--cfg", "docsrs"]
