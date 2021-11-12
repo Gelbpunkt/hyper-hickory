@@ -13,5 +13,13 @@ pub fn new_native_tls_https_connector() -> NativeTlsHttpsConnector {
     let mut http_connector = new_trust_dns_http_connector();
     http_connector.enforce_http(false);
 
-    NativeTlsHttpsConnector::new_with_connector(http_connector)
+    let mut https_connector = NativeTlsHttpsConnector::new_with_connector(http_connector);
+
+    #[cfg(feature = "https-only")]
+    https_connector.https_only(true);
+
+    #[cfg(not(feature = "https-only"))]
+    https_connector.https_only(false);
+
+    https_connector
 }
