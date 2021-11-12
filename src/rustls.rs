@@ -2,6 +2,9 @@ use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 
 use crate::{new_trust_dns_http_connector, TrustDnsHttpConnector};
 
+#[cfg(all(not(feature = "rustls-http1"), not(feature = "rustls-http2")))]
+compile_error!("Either the rustls-http1 or the rustls-http2 feature must be enabled");
+
 /// A [`HttpsConnector`] that uses a [`TrustDnsHttpConnector`].
 #[cfg_attr(
     docsrs,
