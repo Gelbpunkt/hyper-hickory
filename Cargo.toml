@@ -17,13 +17,15 @@ tokio = { version = "1", default-features = false, features = ["rt"] }
 trust-dns-resolver = { version = "0.20", default-features = false, features = ["system-config", "tokio-runtime"] }
 
 # Rustls
-hyper-rustls = { git = "https://github.com/g2p/hyper-rustls", branch = "rustls-0.20", default-features = false, features = ["tokio-runtime"], optional = true }
+hyper-rustls = { version = "0.23", default-features = false, features = ["tokio-runtime"], optional = true }
 
 # Native-TLS
 hyper-tls = { version = "0.5", default-features = false, optional = true }
 
 [dev-dependencies]
-hyper = { version = "0.14", default-features = false, features = ["client", "tcp", "http1"] }
+criterion = { version = "0.3", features = ["async_tokio"] }
+hyper = { version = "0.14", default-features = false, features = ["client", "tcp", "http1", "http2"] }
+hyper-rustls = { version = "0.23", default-features = false, features = ["tokio-runtime", "webpki-tokio", "http1", "http2"] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 
 [features]
@@ -44,9 +46,15 @@ rustls-webpki = ["__rustls", "hyper-rustls/webpki-tokio"]
 rustls-native = ["__rustls", "hyper-rustls/native-tokio"]
 rustls-http1 = ["hyper-rustls/http1"]
 rustls-http2 = ["hyper-rustls/http2"]
+rustls-tls-12 = ["hyper-rustls/tls12"]
 
 # NativeTlsHttpsConnector options
 native-tls = ["hyper-tls"]
+
+[[bench]]
+name = "requests_per_sec"
+harness = false
+path = "benches/requests_per_sec.rs"
 
 [package.metadata.docs.rs]
 features = ["rustls-webpki", "rustls-native", "native-tls"]
