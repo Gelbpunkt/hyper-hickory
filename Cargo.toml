@@ -1,7 +1,7 @@
 [package]
 name = "hyper-trust-dns"
-version = "0.3.0"
-edition = "2021"
+version = "0.3.1"
+edition = "2018"
 description = "HTTP/HTTPS connectors for hyper that use trust-dns' DNS resolver"
 license = "MIT"
 documentation = "https://docs.rs/hyper-trust-dns"
