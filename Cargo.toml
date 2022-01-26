@@ -12,7 +12,6 @@ repository = "https://github.com/Gelbpunkt/hyper-trust-dns"
 
 [dependencies]
 hyper = { version = "0.14", default-features = false, features = ["client", "runtime", "tcp"] }
-log = "0.4"
 tokio = { version = "1", default-features = false, features = ["rt"] }
 trust-dns-resolver = { version = "0.20", default-features = false, features = ["system-config", "tokio-runtime"] }
 
