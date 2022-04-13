@@ -66,7 +66,7 @@ impl TrustDnsResolver {
     /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
     /// This limits the registered connections to just HTTPS lookups.
     /// This must be run inside a Tokio runtime context.
-    #[cfg(feature = "dns-over-https")]
+    #[cfg(feature = "dns-over-https-rustls")]
     #[must_use]
     pub fn cloudflare_https() -> Self {
         Self::with_config_and_options(ResolverConfig::cloudflare_https(), ResolverOpts::default())
@@ -75,7 +75,11 @@ impl TrustDnsResolver {
     /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
     /// This limits the registered connections to just TLS lookups.
     /// This must be run inside a Tokio runtime context.
-    #[cfg(feature = "dns-over-tls")]
+    #[cfg(any(
+        feature = "dns-over-rustls",
+        feature = "dns-over-native-tls",
+        feature = "dns-over-openssl"
+    ))]
     #[must_use]
     pub fn cloudflare_tls() -> Self {
         Self::with_config_and_options(ResolverConfig::cloudflare_tls(), ResolverOpts::default())
@@ -91,7 +95,7 @@ impl TrustDnsResolver {
     /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
     /// This limits the registered connections to just HTTPS lookups.
     /// This must be run inside a Tokio runtime context.
-    #[cfg(feature = "dns-over-https")]
+    #[cfg(feature = "dns-over-https-rustls")]
     #[must_use]
     pub fn quad9_https() -> Self {
         Self::with_config_and_options(ResolverConfig::quad9_https(), ResolverOpts::default())
@@ -100,7 +104,11 @@ impl TrustDnsResolver {
     /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
     /// This limits the registered connections to just TLS lookups.
     /// This must be run inside a Tokio runtime context.
-    #[cfg(feature = "dns-over-tls")]
+    #[cfg(any(
+        feature = "dns-over-rustls",
+        feature = "dns-over-native-tls",
+        feature = "dns-over-openssl"
+    ))]
     #[must_use]
     pub fn quad9_tls() -> Self {
         Self::with_config_and_options(ResolverConfig::quad9_tls(), ResolverOpts::default())
@@ -152,7 +160,7 @@ impl TrustDnsResolver {
         native_https_connector.https_only(true);
 
         #[cfg(not(feature = "https-only"))]
-        https_connector.https_only(false);
+        native_https_connector.https_only(false);
 
         native_https_connector
     }

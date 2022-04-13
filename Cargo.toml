@@ -35,13 +35,11 @@ https-only = []
 system-config = ["trust-dns-resolver/system-config"]
 
 # DNS features
-dns-over-tls = []
-dns-over-openssl = ["dns-over-tls", "trust-dns-resolver/dns-over-openssl"]
-dns-over-native-tls = ["dns-over-tls", "trust-dns-resolver/dns-over-native-tls"]
-dns-over-rustls = ["dns-over-tls", "trust-dns-resolver/dns-over-rustls"]
+dns-over-openssl = ["trust-dns-resolver/dns-over-openssl"]
+dns-over-native-tls = ["trust-dns-resolver/dns-over-native-tls"]
+dns-over-rustls = ["trust-dns-resolver/dns-over-rustls"]
 
-dns-over-https = []
-dns-over-https-rustls = ["dns-over-https", "trust-dns-resolver/dns-over-https-rustls"]
+dns-over-https-rustls = ["trust-dns-resolver/dns-over-https-rustls"]
 
 dnssec-openssl = ["trust-dns-resolver/dnssec-openssl"]
 dnssec-ring = ["trust-dns-resolver/dnssec-ring"]
