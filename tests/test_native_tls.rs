@@ -1,11 +1,11 @@
 #[cfg(feature = "native-tls")]
 mod tests {
     use hyper::{Body, Client, Request};
-    use hyper_trust_dns::new_native_tls_https_connector;
+    use hyper_trust_dns::TrustDnsResolver;
 
     #[tokio::test]
     async fn test_native_tls_works() {
-        let connector = new_native_tls_https_connector();
+        let connector = TrustDnsResolver::default().into_native_tls_https_connector();
         let client = Client::builder().build(connector);
 
         let request = Request::builder()

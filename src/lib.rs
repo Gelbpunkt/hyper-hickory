@@ -1,21 +1,7 @@
-//! This crate provides HTTP/HTTPS connectors for [hyper](https://github.com/hyperium/hyper) that use the fast and advanced DNS resolver of [trust-dns](https://github.com/bluejekyll/trust-dns) instead of the default threadpool implementation of hyper.
-//!
-//! ## Types of connectors
-//!
-//! There are 3 connectors:
-//!
-//! - [`TrustDnsHttpConnector`], a wrapper around [`HttpConnector<TrustDnsResolver>`]. Created with [`new_trust_dns_http_connector`].
-//! - [`RustlsHttpsConnector`], a [hyper-rustls](https://github.com/rustls/hyper-rustls) based connector to work with [`TrustDnsHttpConnector`]. Created with [`new_rustls_webpki_https_connector`] or [`new_rustls_native_https_connector`].
-//! - [`NativeTlsHttpsConnector`], a [hyper-tls](https://github.com/hyperium/hyper-tls) based connector to work with [`TrustDnsHttpConnector`]. Created with [`new_native_tls_https_connector`].
-//!
-//! The HTTP connector is always available, the other two can be enabled via the `rustls-webpki` (uses webpki roots)/`rustls-native` (uses OS cert store) and `native-tls` features respectably.
-//!
-//! ## Trust-DNS options
-//!
-//! The crate has other features that toggle functionality in [trust-dns-resolver](https://github.com/bluejekyll/trust-dns/tree/main/crates/resolver), namingly `dns-over-openssl`, `dns-over-native-tls` and `dns-over-rustls` for DNS-over-TLS, `dns-over-https-rustls` for DNS-over-HTTPS and `dnssec-openssl` and `dnssec-ring` for DNSSEC.
+#![doc = include_str!("../README.md")]
 #![deny(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 use std::{
     future::Future,
@@ -33,18 +19,8 @@ use trust_dns_resolver::{
     config::{ResolverConfig, ResolverOpts},
     error::ResolveError,
     lookup_ip::LookupIpIntoIter,
-    TokioAsyncResolver, TokioHandle,
+    TokioAsyncResolver,
 };
-
-#[cfg(feature = "native-tls")]
-pub use crate::native_tls::{new_native_tls_https_connector, NativeTlsHttpsConnector};
-#[cfg(feature = "__rustls")]
-pub use crate::rustls::*;
-
-#[cfg(feature = "native-tls")]
-mod native_tls;
-#[cfg(feature = "__rustls")]
-mod rustls;
 
 /// A hyper resolver using `trust-dns`'s [`TokioAsyncResolver`].
 #[derive(Clone)]
@@ -68,27 +44,171 @@ impl Iterator for SocketAddrs {
 impl TrustDnsResolver {
     /// Create a new [`TrustDnsResolver`] with the default config options.
     /// This must be run inside a Tokio runtime context.
-    #[allow(clippy::missing_panics_doc)]
     #[must_use]
     pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Create a new [`TrustDnsResolver`] that uses the Google nameservers.
+    /// This must be run inside a Tokio runtime context.
+    #[must_use]
+    pub fn google() -> Self {
+        Self::with_config_and_options(ResolverConfig::google(), ResolverOpts::default())
+    }
+
+    /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
+    /// This must be run inside a Tokio runtime context.
+    #[must_use]
+    pub fn cloudflare() -> Self {
+        Self::with_config_and_options(ResolverConfig::cloudflare(), ResolverOpts::default())
+    }
+
+    /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
+    /// This limits the registered connections to just HTTPS lookups.
+    /// This must be run inside a Tokio runtime context.
+    #[cfg(feature = "dns-over-https")]
+    #[must_use]
+    pub fn cloudflare_https() -> Self {
+        Self::with_config_and_options(ResolverConfig::cloudflare_https(), ResolverOpts::default())
+    }
+
+    /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
+    /// This limits the registered connections to just TLS lookups.
+    /// This must be run inside a Tokio runtime context.
+    #[cfg(feature = "dns-over-tls")]
+    #[must_use]
+    pub fn cloudflare_tls() -> Self {
+        Self::with_config_and_options(ResolverConfig::cloudflare_tls(), ResolverOpts::default())
+    }
+
+    /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
+    /// This must be run inside a Tokio runtime context.
+    #[must_use]
+    pub fn quad9() -> Self {
+        Self::with_config_and_options(ResolverConfig::quad9(), ResolverOpts::default())
+    }
+
+    /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
+    /// This limits the registered connections to just HTTPS lookups.
+    /// This must be run inside a Tokio runtime context.
+    #[cfg(feature = "dns-over-https")]
+    #[must_use]
+    pub fn quad9_https() -> Self {
+        Self::with_config_and_options(ResolverConfig::quad9_https(), ResolverOpts::default())
+    }
+
+    /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
+    /// This limits the registered connections to just TLS lookups.
+    /// This must be run inside a Tokio runtime context.
+    #[cfg(feature = "dns-over-tls")]
+    #[must_use]
+    pub fn quad9_tls() -> Self {
+        Self::with_config_and_options(ResolverConfig::quad9_tls(), ResolverOpts::default())
+    }
+
+    /// Create a new [`TrustDnsResolver`] with the resolver configuration
+    /// options specified.
+    /// This must be run inside a Tokio runtime context.
+    #[allow(clippy::missing_panics_doc)]
+    #[must_use]
+    pub fn with_config_and_options(config: ResolverConfig, options: ResolverOpts) -> Self {
         // This unwrap is safe because internally, there is nothing to be unwrapped
         // TokioAsyncResolver::new cannot return Err
-        let resolver = Arc::new(
-            TokioAsyncResolver::new(
-                ResolverConfig::default(),
-                ResolverOpts::default(),
-                TokioHandle,
-            )
-            .unwrap(),
-        );
+        let resolver = Arc::new(TokioAsyncResolver::tokio(config, options).unwrap());
 
         Self { resolver }
+    }
+
+    /// Create a new [`TrustDnsResolver`] with the system configuration.
+    /// This must be run inside a Tokio runtime context.
+    #[cfg(feature = "system-config")]
+    #[allow(clippy::missing_panics_doc)]
+    #[must_use]
+    pub fn from_system_conf() -> Self {
+        // This unwrap is safe because internally, there is nothing to be unwrapped
+        // TokioAsyncResolver::new cannot return Err
+        let resolver = Arc::new(TokioAsyncResolver::tokio_from_system_conf().unwrap());
+
+        Self { resolver }
+    }
+
+    /// Create a new [`TrustDnsHttpConnector`] with this resolver.
+    #[must_use]
+    pub fn into_http_connector(self) -> TrustDnsHttpConnector {
+        TrustDnsHttpConnector::new_with_resolver(self)
+    }
+
+    /// Create a new [`NativeTlsHttpsConnector`].
+    #[cfg(feature = "native-tls")]
+    #[must_use]
+    pub fn into_native_tls_https_connector(self) -> NativeTlsHttpsConnector {
+        let mut http_connector = self.into_http_connector();
+        http_connector.enforce_http(false);
+
+        let mut native_https_connector =
+            NativeTlsHttpsConnector::new_with_connector(http_connector);
+
+        #[cfg(feature = "https-only")]
+        native_https_connector.https_only(true);
+
+        #[cfg(not(feature = "https-only"))]
+        https_connector.https_only(false);
+
+        native_https_connector
+    }
+
+    /// Create a new [`RustlsHttpsConnector`] using the OS root store.
+    #[cfg(feature = "rustls-native")]
+    #[must_use]
+    pub fn into_rustls_native_https_connector(self) -> RustlsHttpsConnector {
+        let mut http_connector = self.into_http_connector();
+        http_connector.enforce_http(false);
+
+        let builder = hyper_rustls::HttpsConnectorBuilder::new().with_native_roots();
+
+        #[cfg(feature = "https-only")]
+        let builder = builder.https_only();
+
+        #[cfg(not(feature = "https-only"))]
+        let builder = builder.https_or_http();
+
+        #[cfg(feature = "rustls-http1")]
+        let builder = builder.enable_http1();
+
+        #[cfg(feature = "rustls-http2")]
+        let builder = builder.enable_http2();
+
+        builder.wrap_connector(http_connector)
+    }
+
+    /// Create a new [`RustlsHttpsConnector`] using the `webpki_roots`.
+    #[cfg(feature = "rustls-native")]
+    #[must_use]
+    pub fn into_rustls_webpki_https_connector(self) -> RustlsHttpsConnector {
+        let mut http_connector = self.into_http_connector();
+        http_connector.enforce_http(false);
+
+        let builder = hyper_rustls::HttpsConnectorBuilder::new().with_webpki_roots();
+
+        #[cfg(feature = "https-only")]
+        let builder = builder.https_only();
+
+        #[cfg(not(feature = "https-only"))]
+        let builder = builder.https_or_http();
+
+        #[cfg(feature = "rustls-http1")]
+        let builder = builder.enable_http1();
+
+        #[cfg(feature = "rustls-http2")]
+        let builder = builder.enable_http2();
+
+        builder.wrap_connector(http_connector)
     }
 }
 
 impl Default for TrustDnsResolver {
     fn default() -> Self {
-        Self::new()
+        Self::with_config_and_options(ResolverConfig::default(), ResolverOpts::default())
     }
 }
 
@@ -117,8 +237,10 @@ impl Service<Name> for TrustDnsResolver {
 /// A [`HttpConnector`] that uses the [`TrustDnsResolver`].
 pub type TrustDnsHttpConnector = HttpConnector<TrustDnsResolver>;
 
-/// Create a new [`TrustDnsHttpConnector`] that only supports HTTP.
-#[must_use]
-pub fn new_trust_dns_http_connector() -> TrustDnsHttpConnector {
-    TrustDnsHttpConnector::new_with_resolver(TrustDnsResolver::new())
-}
+/// A [`hyper_tls::HttpsConnector`] that uses a [`TrustDnsHttpConnector`].
+#[cfg(feature = "native-tls")]
+pub type NativeTlsHttpsConnector = hyper_tls::HttpsConnector<TrustDnsHttpConnector>;
+
+/// A [`hyper_rustls::HttpsConnector`] that uses a [`TrustDnsHttpConnector`].
+#[cfg(any(feature = "rustls-native", feature = "rustls-webpki"))]
+pub type RustlsHttpsConnector = hyper_rustls::HttpsConnector<TrustDnsHttpConnector>;
