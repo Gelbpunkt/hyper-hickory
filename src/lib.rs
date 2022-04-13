@@ -182,7 +182,7 @@ impl TrustDnsResolver {
     }
 
     /// Create a new [`RustlsHttpsConnector`] using the `webpki_roots`.
-    #[cfg(feature = "rustls-native")]
+    #[cfg(feature = "rustls-webpki")]
     #[must_use]
     pub fn into_rustls_webpki_https_connector(self) -> RustlsHttpsConnector {
         let mut http_connector = self.into_http_connector();
