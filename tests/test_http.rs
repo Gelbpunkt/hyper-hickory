@@ -8,7 +8,7 @@ async fn test_lookup_works() {
 
     let request = Request::builder()
         .method("GET")
-        .uri("http://www.google.com/")
+        .uri("http://example.com/")
         .body(Body::empty())
         .unwrap();
 

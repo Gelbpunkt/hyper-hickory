@@ -41,6 +41,22 @@ impl Iterator for SocketAddrs {
     }
 }
 
+/// Get the default resolver options as configured per crate features.
+/// This allows us to enable DNSSEC conditionally.
+fn default_opts() -> ResolverOpts {
+    #[cfg(any(feature = "dnssec-openssl", feature = "dnssec-ring"))]
+    let mut opts = ResolverOpts::default();
+    #[cfg(not(any(feature = "dnssec-openssl", feature = "dnssec-ring")))]
+    let opts = ResolverOpts::default();
+
+    #[cfg(any(feature = "dnssec-openssl", feature = "dnssec-ring"))]
+    {
+        opts.validate = true;
+    }
+
+    opts
+}
+
 impl TrustDnsResolver {
     /// Create a new [`TrustDnsResolver`] with the default config options.
     /// This must be run inside a Tokio runtime context.
@@ -53,14 +69,14 @@ impl TrustDnsResolver {
     /// This must be run inside a Tokio runtime context.
     #[must_use]
     pub fn google() -> Self {
-        Self::with_config_and_options(ResolverConfig::google(), ResolverOpts::default())
+        Self::with_config_and_options(ResolverConfig::google(), default_opts())
     }
 
     /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
     /// This must be run inside a Tokio runtime context.
     #[must_use]
     pub fn cloudflare() -> Self {
-        Self::with_config_and_options(ResolverConfig::cloudflare(), ResolverOpts::default())
+        Self::with_config_and_options(ResolverConfig::cloudflare(), default_opts())
     }
 
     /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
@@ -69,7 +85,7 @@ impl TrustDnsResolver {
     #[cfg(feature = "dns-over-https-rustls")]
     #[must_use]
     pub fn cloudflare_https() -> Self {
-        Self::with_config_and_options(ResolverConfig::cloudflare_https(), ResolverOpts::default())
+        Self::with_config_and_options(ResolverConfig::cloudflare_https(), default_opts())
     }
 
     /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
@@ -82,14 +98,14 @@ impl TrustDnsResolver {
     ))]
     #[must_use]
     pub fn cloudflare_tls() -> Self {
-        Self::with_config_and_options(ResolverConfig::cloudflare_tls(), ResolverOpts::default())
+        Self::with_config_and_options(ResolverConfig::cloudflare_tls(), default_opts())
     }
 
     /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
     /// This must be run inside a Tokio runtime context.
     #[must_use]
     pub fn quad9() -> Self {
-        Self::with_config_and_options(ResolverConfig::quad9(), ResolverOpts::default())
+        Self::with_config_and_options(ResolverConfig::quad9(), default_opts())
     }
 
     /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
@@ -98,7 +114,7 @@ impl TrustDnsResolver {
     #[cfg(feature = "dns-over-https-rustls")]
     #[must_use]
     pub fn quad9_https() -> Self {
-        Self::with_config_and_options(ResolverConfig::quad9_https(), ResolverOpts::default())
+        Self::with_config_and_options(ResolverConfig::quad9_https(), default_opts())
     }
 
     /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
@@ -111,7 +127,7 @@ impl TrustDnsResolver {
     ))]
     #[must_use]
     pub fn quad9_tls() -> Self {
-        Self::with_config_and_options(ResolverConfig::quad9_tls(), ResolverOpts::default())
+        Self::with_config_and_options(ResolverConfig::quad9_tls(), default_opts())
     }
 
     /// Create a new [`TrustDnsResolver`] with the resolver configuration
@@ -216,7 +232,7 @@ impl TrustDnsResolver {
 
 impl Default for TrustDnsResolver {
     fn default() -> Self {
-        Self::with_config_and_options(ResolverConfig::default(), ResolverOpts::default())
+        Self::with_config_and_options(ResolverConfig::default(), default_opts())
     }
 }
 

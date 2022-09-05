@@ -55,7 +55,8 @@ fn hyper_trust_dns(c: &mut Criterion) {
         .build()
         .unwrap();
 
-    let https_connector = hyper_trust_dns::new_rustls_webpki_https_connector();
+    let https_connector =
+        hyper_trust_dns::TrustDnsResolver::new().into_rustls_webpki_https_connector();
     let client: Client<_> = Client::builder().build(https_connector);
 
     c.bench_with_input(

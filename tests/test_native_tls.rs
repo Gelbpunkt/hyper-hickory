@@ -10,7 +10,7 @@ mod tests {
 
         let request = Request::builder()
             .method("GET")
-            .uri("https://www.google.com/")
+            .uri("https://example.com/")
             .body(Body::empty())
             .unwrap();
 
