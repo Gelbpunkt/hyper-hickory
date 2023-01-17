@@ -156,6 +156,14 @@ impl TrustDnsResolver {
         Self { resolver }
     }
 
+    /// TODO
+    #[must_use]
+    pub fn from_async_resolver(tokio_async_resolver: TokioAsyncResolver) -> Self {
+        let resolver = Arc::new(tokio_async_resolver);
+
+        Self { resolver }
+    }
+
     /// Create a new [`TrustDnsHttpConnector`] with this resolver.
     #[must_use]
     pub fn into_http_connector(self) -> TrustDnsHttpConnector {
