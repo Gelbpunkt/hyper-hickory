@@ -19,13 +19,17 @@ use trust_dns_resolver::{
     config::{ResolverConfig, ResolverOpts},
     error::ResolveError,
     lookup_ip::LookupIpIntoIter,
-    TokioAsyncResolver,
+    name_server::{RuntimeProvider, TokioRuntimeProvider},
+    AsyncResolver, TokioAsyncResolver,
 };
 
 /// A hyper resolver using `trust-dns`'s [`TokioAsyncResolver`].
+pub type TrustDnsResolver = GenericTrustDnsResolver<TokioRuntimeProvider>;
+
+/// A hyper resolver using `trust-dns`'s [`TokioAsyncResolver`].
 #[derive(Clone)]
-pub struct TrustDnsResolver {
-    resolver: Arc<TokioAsyncResolver>,
+pub struct GenericTrustDnsResolver<R: RuntimeProvider> {
+    resolver: Arc<AsyncResolver<R>>,
 }
 
 /// Iterator over DNS lookup results.
@@ -156,20 +160,6 @@ impl TrustDnsResolver {
         Self { resolver }
     }
 
-    /// TODO
-    #[must_use]
-    pub fn from_async_resolver(tokio_async_resolver: TokioAsyncResolver) -> Self {
-        let resolver = Arc::new(tokio_async_resolver);
-
-        Self { resolver }
-    }
-
-    /// Create a new [`TrustDnsHttpConnector`] with this resolver.
-    #[must_use]
-    pub fn into_http_connector(self) -> TrustDnsHttpConnector {
-        TrustDnsHttpConnector::new_with_resolver(self)
-    }
-
     /// Create a new [`NativeTlsHttpsConnector`].
     #[cfg(feature = "native-tls")]
     #[must_use]
@@ -238,13 +228,29 @@ impl TrustDnsResolver {
     }
 }
 
+impl<R: RuntimeProvider> GenericTrustDnsResolver<R> {
+    /// TODO
+    #[must_use]
+    pub fn from_async_resolver(async_resolver: AsyncResolver<R>) -> Self {
+        let resolver = Arc::new(async_resolver);
+
+        Self { resolver }
+    }
+
+    /// Create a new [`TrustDnsHttpConnector`] with this resolver.
+    #[must_use]
+    pub fn into_http_connector(self) -> GenericTrustDnsHttpConnector<R> {
+        GenericTrustDnsHttpConnector::new_with_resolver(self)
+    }
+}
+
 impl Default for TrustDnsResolver {
     fn default() -> Self {
         Self::with_config_and_options(ResolverConfig::default(), default_opts())
     }
 }
 
-impl Service<Name> for TrustDnsResolver {
+impl<R: RuntimeProvider> Service<Name> for GenericTrustDnsResolver<R> {
     type Response = SocketAddrs;
     type Error = ResolveError;
     #[allow(clippy::type_complexity)]
@@ -268,6 +274,9 @@ impl Service<Name> for TrustDnsResolver {
 
 /// A [`HttpConnector`] that uses the [`TrustDnsResolver`].
 pub type TrustDnsHttpConnector = HttpConnector<TrustDnsResolver>;
+
+/// A [`HttpConnector`] that uses the [`GenericTrustDnsResolver`].
+pub type GenericTrustDnsHttpConnector<R> = HttpConnector<GenericTrustDnsResolver<R>>;
 
 /// A [`hyper_tls::HttpsConnector`] that uses a [`TrustDnsHttpConnector`].
 #[cfg(feature = "native-tls")]
