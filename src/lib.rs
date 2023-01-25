@@ -26,7 +26,7 @@ use trust_dns_resolver::{
 /// A hyper resolver using `trust-dns`'s [`TokioAsyncResolver`].
 pub type TrustDnsResolver = GenericTrustDnsResolver<TokioRuntimeProvider>;
 
-/// A hyper resolver using `trust-dns`'s [`AsyncResolver`] and any RuntimeProvider.
+/// A hyper resolver using `trust-dns`'s [`AsyncResolver`] and any implementor of [`RuntimeProvider`].
 #[derive(Clone)]
 pub struct GenericTrustDnsResolver<R: RuntimeProvider> {
     resolver: Arc<AsyncResolver<R>>,
@@ -164,7 +164,7 @@ impl Default for TrustDnsResolver {
 }
 
 impl<R: RuntimeProvider> GenericTrustDnsResolver<R> {
-    /// Create a GenericTrustDnsResolver from the given AsyncResolver
+    /// Create a [`GenericTrustDnsResolver`] from the given [`AsyncResolver`]
     #[must_use]
     pub fn from_async_resolver(async_resolver: AsyncResolver<R>) -> Self {
         let resolver = Arc::new(async_resolver);
