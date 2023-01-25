@@ -12,13 +12,20 @@ let connector = TrustDnsResolver::default().into_rustls_native_https_connector()
 let client: Client<_> = Client::builder().build(connector);
 ```
 
+## Resolvers
+
+There is a [`GenericTrustDnsResolver`] resolver which can be built from an [`AsyncResolver`] using [`GenericTrustDnsResolver::from_async_resolver`].
+
+For most cases where you are happy to use the standard [`TokioRuntimeProvider`] the [`TrustDnsResolver`] should be used and is able to be built much more easily.
+
+
 ## Types of connectors
 
 There are 3 connectors:
 
-- [`TrustDnsHttpConnector`], a wrapper around [`HttpConnector<TrustDnsResolver>`]. Created with [`TrustDnsResolver::into_http_connector`].
-- [`RustlsHttpsConnector`], a [hyper-rustls](https://github.com/rustls/hyper-rustls) based connector to work with [`TrustDnsHttpConnector`]. Created with [`TrustDnsResolver::into_rustls_native_https_connector`] or [`TrustDnsResolver::into_rustls_webpki_https_connector`].
-- [`NativeTlsHttpsConnector`], a [hyper-tls](https://github.com/hyperium/hyper-tls) based connector to work with [`TrustDnsHttpConnector`]. Created with [`TrustDnsResolver::into_native_tls_https_connector`].
+- [`TrustDnsHttpConnector`], a wrapper around [`HttpConnector<GenericTrustDnsResolver>`]. Created with [`GenericTrustDnsResolver::into_http_connector`].
+- [`RustlsHttpsConnector`], a [hyper-rustls](https://github.com/rustls/hyper-rustls) based connector to work with [`TrustDnsHttpConnector`]. Created with [`GenericTrustDnsResolver::into_rustls_native_https_connector`] or [`GenericTrustDnsResolver::into_rustls_webpki_https_connector`].
+- [`NativeTlsHttpsConnector`], a [hyper-tls](https://github.com/hyperium/hyper-tls) based connector to work with [`TrustDnsHttpConnector`]. Created with [`GenericTrustDnsResolver::into_native_tls_https_connector`].
 
 The HTTP connector is always available, the other two can be enabled via the `rustls-webpki` (uses webpki roots)/`rustls-native` (uses OS cert store) and `native-tls` features respectably.
 
