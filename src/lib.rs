@@ -172,6 +172,12 @@ impl<R: RuntimeProvider> GenericTrustDnsResolver<R> {
         Self { resolver }
     }
 
+    /// Create a new [`TrustDnsHttpConnector`] with this resolver.
+    #[must_use]
+    pub fn into_http_connector(self) -> TrustDnsHttpConnector<R> {
+        TrustDnsHttpConnector::new_with_resolver(self)
+    }
+
     /// Create a new [`NativeTlsHttpsConnector`].
     #[cfg(feature = "native-tls")]
     #[must_use]
@@ -238,12 +244,6 @@ impl<R: RuntimeProvider> GenericTrustDnsResolver<R> {
 
         builder.wrap_connector(http_connector)
     }
-
-    /// Create a new [`TrustDnsHttpConnector`] with this resolver.
-    #[must_use]
-    pub fn into_http_connector(self) -> TrustDnsHttpConnector<R> {
-        TrustDnsHttpConnector::new_with_resolver(self)
-    }
 }
 
 impl<R: RuntimeProvider> Service<Name> for GenericTrustDnsResolver<R> {
@@ -268,7 +268,7 @@ impl<R: RuntimeProvider> Service<Name> for GenericTrustDnsResolver<R> {
     }
 }
 
-/// A [`HttpConnector`] that uses the [`TrustDnsResolver`].
+/// A [`HttpConnector`] that uses the [`GenericTrustDnsResolver`].
 pub type TrustDnsHttpConnector<R> = HttpConnector<GenericTrustDnsResolver<R>>;
 
 /// A [`hyper_tls::HttpsConnector`] that uses a [`TrustDnsHttpConnector`].
