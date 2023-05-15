@@ -1,7 +1,7 @@
 #[cfg(feature = "native-tls")]
 mod tests {
     use hyper::{Body, Client, Request};
-    use hyper_trust_dns::TrustDnsResolver;
+    use hyper_trust_dns::TokioTrustDnsResolver;
 
     #[tokio::test]
     async fn test_native_tls_works() {

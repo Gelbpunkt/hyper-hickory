@@ -16,19 +16,23 @@ use hyper::{
     service::Service,
 };
 use trust_dns_resolver::{
+    error::ResolveError, lookup_ip::LookupIpIntoIter, name_server::RuntimeProvider, AsyncResolver,
+};
+
+#[cfg(feature = "tokio")]
+use trust_dns_resolver::{
     config::{ResolverConfig, ResolverOpts},
-    error::ResolveError,
-    lookup_ip::LookupIpIntoIter,
-    name_server::{RuntimeProvider, TokioRuntimeProvider},
-    AsyncResolver, TokioAsyncResolver,
+    name_server::TokioRuntimeProvider,
+    TokioAsyncResolver,
 };
 
 /// A hyper resolver using `trust-dns`'s [`TokioAsyncResolver`].
-pub type TrustDnsResolver = GenericTrustDnsResolver<TokioRuntimeProvider>;
+#[cfg(feature = "tokio")]
+pub type TokioTrustDnsResolver = TrustDnsResolver<TokioRuntimeProvider>;
 
 /// A hyper resolver using `trust-dns`'s [`AsyncResolver`] and any implementor of [`RuntimeProvider`].
 #[derive(Clone)]
-pub struct GenericTrustDnsResolver<R: RuntimeProvider> {
+pub struct TrustDnsResolver<R: RuntimeProvider> {
     resolver: Arc<AsyncResolver<R>>,
 }
 
@@ -47,6 +51,7 @@ impl Iterator for SocketAddrs {
 
 /// Get the default resolver options as configured per crate features.
 /// This allows us to enable DNSSEC conditionally.
+#[cfg(feature = "tokio")]
 fn default_opts() -> ResolverOpts {
     #[cfg(any(feature = "dnssec-openssl", feature = "dnssec-ring"))]
     let mut opts = ResolverOpts::default();
@@ -61,29 +66,30 @@ fn default_opts() -> ResolverOpts {
     opts
 }
 
-impl TrustDnsResolver {
-    /// Create a new [`TrustDnsResolver`] with the default config options.
+#[cfg(feature = "tokio")]
+impl TokioTrustDnsResolver {
+    /// Create a new [`TokioTrustDnsResolver`] with the default config options.
     /// This must be run inside a Tokio runtime context.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Create a new [`TrustDnsResolver`] that uses the Google nameservers.
+    /// Create a new [`TokioTrustDnsResolver`] that uses the Google nameservers.
     /// This must be run inside a Tokio runtime context.
     #[must_use]
     pub fn google() -> Self {
         Self::with_config_and_options(ResolverConfig::google(), default_opts())
     }
 
-    /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
+    /// Create a new [`TokioTrustDnsResolver`] that uses the Cloudflare nameservers.
     /// This must be run inside a Tokio runtime context.
     #[must_use]
     pub fn cloudflare() -> Self {
         Self::with_config_and_options(ResolverConfig::cloudflare(), default_opts())
     }
 
-    /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
+    /// Create a new [`TokioTrustDnsResolver`] that uses the Cloudflare nameservers.
     /// This limits the registered connections to just HTTPS lookups.
     /// This must be run inside a Tokio runtime context.
     #[cfg(feature = "dns-over-https-rustls")]
@@ -92,7 +98,7 @@ impl TrustDnsResolver {
         Self::with_config_and_options(ResolverConfig::cloudflare_https(), default_opts())
     }
 
-    /// Create a new [`TrustDnsResolver`] that uses the Cloudflare nameservers.
+    /// Create a new [`TokioTrustDnsResolver`] that uses the Cloudflare nameservers.
     /// This limits the registered connections to just TLS lookups.
     /// This must be run inside a Tokio runtime context.
     #[cfg(any(
@@ -105,14 +111,14 @@ impl TrustDnsResolver {
         Self::with_config_and_options(ResolverConfig::cloudflare_tls(), default_opts())
     }
 
-    /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
+    /// Create a new [`TokioTrustDnsResolver`] that uses the Quad9 nameservers.
     /// This must be run inside a Tokio runtime context.
     #[must_use]
     pub fn quad9() -> Self {
         Self::with_config_and_options(ResolverConfig::quad9(), default_opts())
     }
 
-    /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
+    /// Create a new [`TokioTrustDnsResolver`] that uses the Quad9 nameservers.
     /// This limits the registered connections to just HTTPS lookups.
     /// This must be run inside a Tokio runtime context.
     #[cfg(feature = "dns-over-https-rustls")]
@@ -121,7 +127,7 @@ impl TrustDnsResolver {
         Self::with_config_and_options(ResolverConfig::quad9_https(), default_opts())
     }
 
-    /// Create a new [`TrustDnsResolver`] that uses the Quad9 nameservers.
+    /// Create a new [`TokioTrustDnsResolver`] that uses the Quad9 nameservers.
     /// This limits the registered connections to just TLS lookups.
     /// This must be run inside a Tokio runtime context.
     #[cfg(any(
@@ -134,7 +140,7 @@ impl TrustDnsResolver {
         Self::with_config_and_options(ResolverConfig::quad9_tls(), default_opts())
     }
 
-    /// Create a new [`TrustDnsResolver`] with the resolver configuration
+    /// Create a new [`TokioTrustDnsResolver`] with the resolver configuration
     /// options specified.
     /// This must be run inside a Tokio runtime context.
     #[allow(clippy::missing_panics_doc)]
@@ -145,7 +151,7 @@ impl TrustDnsResolver {
         Self::from_async_resolver(TokioAsyncResolver::tokio(config, options).unwrap())
     }
 
-    /// Create a new [`TrustDnsResolver`] with the system configuration.
+    /// Create a new [`TokioTrustDnsResolver`] with the system configuration.
     /// This must be run inside a Tokio runtime context.
     #[cfg(feature = "system-config")]
     #[allow(clippy::missing_panics_doc)]
@@ -157,14 +163,15 @@ impl TrustDnsResolver {
     }
 }
 
-impl Default for TrustDnsResolver {
+#[cfg(feature = "tokio")]
+impl Default for TokioTrustDnsResolver {
     fn default() -> Self {
         Self::with_config_and_options(ResolverConfig::default(), default_opts())
     }
 }
 
-impl<R: RuntimeProvider> GenericTrustDnsResolver<R> {
-    /// Create a [`GenericTrustDnsResolver`] from the given [`AsyncResolver`]
+impl<R: RuntimeProvider> TrustDnsResolver<R> {
+    /// Create a [`TrustDnsResolver`] from the given [`AsyncResolver`]
     #[must_use]
     pub fn from_async_resolver(async_resolver: AsyncResolver<R>) -> Self {
         let resolver = Arc::new(async_resolver);
@@ -246,7 +253,7 @@ impl<R: RuntimeProvider> GenericTrustDnsResolver<R> {
     }
 }
 
-impl<R: RuntimeProvider> Service<Name> for GenericTrustDnsResolver<R> {
+impl<R: RuntimeProvider> Service<Name> for TrustDnsResolver<R> {
     type Response = SocketAddrs;
     type Error = ResolveError;
     #[allow(clippy::type_complexity)]
@@ -268,8 +275,8 @@ impl<R: RuntimeProvider> Service<Name> for GenericTrustDnsResolver<R> {
     }
 }
 
-/// A [`HttpConnector`] that uses the [`GenericTrustDnsResolver`].
-pub type TrustDnsHttpConnector<R> = HttpConnector<GenericTrustDnsResolver<R>>;
+/// A [`HttpConnector`] that uses the [`TrustDnsResolver`].
+pub type TrustDnsHttpConnector<R> = HttpConnector<TrustDnsResolver<R>>;
 
 /// A [`hyper_tls::HttpsConnector`] that uses a [`TrustDnsHttpConnector`].
 #[cfg(feature = "native-tls")]
