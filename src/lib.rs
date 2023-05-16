@@ -295,5 +295,8 @@ pub type TokioTrustDnsHttpConnector = TrustDnsHttpConnector<TokioRuntimeProvider
 pub type TokioNativeTlsHttpsConnector = NativeTlsHttpsConnector<TokioRuntimeProvider>;
 
 /// A [`hyper_rustls::HttpsConnector`] that uses a [`TokioTrustDnsHttpConnector`].
-#[cfg(all(any(feature = "rustls-native", feature = "rustls-webpki"), feature = "tokio"))]
+#[cfg(all(
+    any(feature = "rustls-native", feature = "rustls-webpki"),
+    feature = "tokio"
+))]
 pub type TokioRustlsHttpsConnector = RustlsHttpsConnector<TokioRuntimeProvider>;
