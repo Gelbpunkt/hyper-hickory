@@ -16,24 +16,24 @@ use hyper::{
     service::Service,
 };
 use trust_dns_resolver::{
-    error::ResolveError, lookup_ip::LookupIpIntoIter, name_server::RuntimeProvider, AsyncResolver,
+    error::ResolveError, lookup_ip::LookupIpIntoIter, name_server::ConnectionProvider, AsyncResolver,
 };
 
 #[cfg(feature = "tokio")]
 use trust_dns_resolver::{
     config::{ResolverConfig, ResolverOpts},
-    name_server::TokioRuntimeProvider,
+    name_server::TokioConnectionProvider,
     TokioAsyncResolver,
 };
 
 /// A hyper resolver using `trust-dns`'s [`TokioAsyncResolver`].
 #[cfg(feature = "tokio")]
-pub type TokioTrustDnsResolver = TrustDnsResolver<TokioRuntimeProvider>;
+pub type TokioTrustDnsResolver = TrustDnsResolver<TokioConnectionProvider>;
 
-/// A hyper resolver using `trust-dns`'s [`AsyncResolver`] and any implementor of [`RuntimeProvider`].
+/// A hyper resolver using `trust-dns`'s [`AsyncResolver`] and any implementor of [`ConnectionProvider`].
 #[derive(Clone)]
-pub struct TrustDnsResolver<R: RuntimeProvider> {
-    resolver: Arc<AsyncResolver<R>>,
+pub struct TrustDnsResolver<C: ConnectionProvider> {
+    resolver: Arc<AsyncResolver<C>>,
 }
 
 /// Iterator over DNS lookup results.
@@ -148,7 +148,7 @@ impl TokioTrustDnsResolver {
     pub fn with_config_and_options(config: ResolverConfig, options: ResolverOpts) -> Self {
         // This unwrap is safe because internally, there is nothing to be unwrapped
         // TokioAsyncResolver::new cannot return Err
-        Self::from_async_resolver(TokioAsyncResolver::tokio(config, options).unwrap())
+        Self::from_async_resolver(TokioAsyncResolver::tokio(config, options))
     }
 
     /// Create a new [`TokioTrustDnsResolver`] with the system configuration.
@@ -170,10 +170,10 @@ impl Default for TokioTrustDnsResolver {
     }
 }
 
-impl<R: RuntimeProvider> TrustDnsResolver<R> {
+impl<C: ConnectionProvider> TrustDnsResolver<C> {
     /// Create a [`TrustDnsResolver`] from the given [`AsyncResolver`]
     #[must_use]
-    pub fn from_async_resolver(async_resolver: AsyncResolver<R>) -> Self {
+    pub fn from_async_resolver(async_resolver: AsyncResolver<C>) -> Self {
         let resolver = Arc::new(async_resolver);
 
         Self { resolver }
@@ -181,14 +181,14 @@ impl<R: RuntimeProvider> TrustDnsResolver<R> {
 
     /// Create a new [`TrustDnsHttpConnector`] with this resolver.
     #[must_use]
-    pub fn into_http_connector(self) -> TrustDnsHttpConnector<R> {
+    pub fn into_http_connector(self) -> TrustDnsHttpConnector<C> {
         TrustDnsHttpConnector::new_with_resolver(self)
     }
 
     /// Create a new [`NativeTlsHttpsConnector`].
     #[cfg(feature = "native-tls")]
     #[must_use]
-    pub fn into_native_tls_https_connector(self) -> NativeTlsHttpsConnector<R> {
+    pub fn into_native_tls_https_connector(self) -> NativeTlsHttpsConnector<C> {
         let mut http_connector = self.into_http_connector();
         http_connector.enforce_http(false);
 
@@ -207,7 +207,7 @@ impl<R: RuntimeProvider> TrustDnsResolver<R> {
     /// Create a new [`RustlsHttpsConnector`] using the OS root store.
     #[cfg(feature = "rustls-native")]
     #[must_use]
-    pub fn into_rustls_native_https_connector(self) -> RustlsHttpsConnector<R> {
+    pub fn into_rustls_native_https_connector(self) -> RustlsHttpsConnector<C> {
         let mut http_connector = self.into_http_connector();
         http_connector.enforce_http(false);
 
@@ -231,7 +231,7 @@ impl<R: RuntimeProvider> TrustDnsResolver<R> {
     /// Create a new [`RustlsHttpsConnector`] using the `webpki_roots`.
     #[cfg(feature = "rustls-webpki")]
     #[must_use]
-    pub fn into_rustls_webpki_https_connector(self) -> RustlsHttpsConnector<R> {
+    pub fn into_rustls_webpki_https_connector(self) -> RustlsHttpsConnector<C> {
         let mut http_connector = self.into_http_connector();
         http_connector.enforce_http(false);
 
@@ -253,7 +253,7 @@ impl<R: RuntimeProvider> TrustDnsResolver<R> {
     }
 }
 
-impl<R: RuntimeProvider> Service<Name> for TrustDnsResolver<R> {
+impl<C: ConnectionProvider> Service<Name> for TrustDnsResolver<C> {
     type Response = SocketAddrs;
     type Error = ResolveError;
     #[allow(clippy::type_complexity)]
@@ -276,27 +276,27 @@ impl<R: RuntimeProvider> Service<Name> for TrustDnsResolver<R> {
 }
 
 /// A [`HttpConnector`] that uses the [`TrustDnsResolver`].
-pub type TrustDnsHttpConnector<R> = HttpConnector<TrustDnsResolver<R>>;
+pub type TrustDnsHttpConnector<C> = HttpConnector<TrustDnsResolver<C>>;
 
 /// A [`hyper_tls::HttpsConnector`] that uses a [`TrustDnsHttpConnector`].
 #[cfg(feature = "native-tls")]
-pub type NativeTlsHttpsConnector<R> = hyper_tls::HttpsConnector<TrustDnsHttpConnector<R>>;
+pub type NativeTlsHttpsConnector<C> = hyper_tls::HttpsConnector<TrustDnsHttpConnector<C>>;
 
 /// A [`hyper_rustls::HttpsConnector`] that uses a [`TrustDnsHttpConnector`].
 #[cfg(any(feature = "rustls-native", feature = "rustls-webpki"))]
-pub type RustlsHttpsConnector<R> = hyper_rustls::HttpsConnector<TrustDnsHttpConnector<R>>;
+pub type RustlsHttpsConnector<C> = hyper_rustls::HttpsConnector<TrustDnsHttpConnector<C>>;
 
 /// A [`HttpConnector`] that uses the [`TokioTrustDnsResolver`].
 #[cfg(feature = "tokio")]
-pub type TokioTrustDnsHttpConnector = TrustDnsHttpConnector<TokioRuntimeProvider>;
+pub type TokioTrustDnsHttpConnector = TrustDnsHttpConnector<TokioConnectionProvider>;
 
 /// A [`hyper_tls::HttpsConnector`] that uses a [`TokioTrustDnsHttpConnector`].
 #[cfg(all(feature = "native-tls", feature = "tokio"))]
-pub type TokioNativeTlsHttpsConnector = NativeTlsHttpsConnector<TokioRuntimeProvider>;
+pub type TokioNativeTlsHttpsConnector = NativeTlsHttpsConnector<TokioConnectionProvider>;
 
 /// A [`hyper_rustls::HttpsConnector`] that uses a [`TokioTrustDnsHttpConnector`].
 #[cfg(all(
     any(feature = "rustls-native", feature = "rustls-webpki"),
     feature = "tokio"
 ))]
-pub type TokioRustlsHttpsConnector = RustlsHttpsConnector<TokioRuntimeProvider>;
+pub type TokioRustlsHttpsConnector = RustlsHttpsConnector<TokioConnectionProvider>;

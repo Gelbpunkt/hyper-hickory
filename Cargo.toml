@@ -10,7 +10,7 @@ repository = "https://github.com/Gelbpunkt/hyper-trust-dns"
 
 [dependencies]
 hyper = { version = "0.14", default-features = false, features = ["client", "runtime", "tcp"] }
-trust-dns-resolver = { version = "0.23.0-alpha.2", default-features = false }
+trust-dns-resolver = { version = "0.23.0-alpha.5", default-features = false }
 
 # Rustls
 hyper-rustls = { version = "0.24", default-features = false, optional = true }

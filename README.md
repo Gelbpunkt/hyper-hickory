@@ -8,7 +8,7 @@ This crate provides HTTP/HTTPS connectors for [hyper](https://github.com/hyperiu
 use hyper::Client;
 use hyper_trust_dns::TrustDnsResolver;
 
-let connector = TrustDnsResolver::default().into_rustls_native_https_connector();
+let connector = TrustDnsResolver::default().into_rustls_webpki_https_connector();
 let client: Client<_> = Client::builder().build(connector);
 ```
 
