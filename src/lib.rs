@@ -16,7 +16,8 @@ use hyper::{
     service::Service,
 };
 use trust_dns_resolver::{
-    error::ResolveError, lookup_ip::LookupIpIntoIter, name_server::ConnectionProvider, AsyncResolver,
+    error::ResolveError, lookup_ip::LookupIpIntoIter, name_server::ConnectionProvider,
+    AsyncResolver,
 };
 
 #[cfg(feature = "tokio")]
