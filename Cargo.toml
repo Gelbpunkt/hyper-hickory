@@ -8,15 +8,12 @@ documentation = "https://docs.rs/hyper-trust-dns"
 homepage = "https://github.com/Gelbpunkt/hyper-trust-dns"
 repository = "https://github.com/Gelbpunkt/hyper-trust-dns"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 hyper = { version = "0.14", default-features = false, features = ["client", "runtime", "tcp"] }
-tokio = { version = "1", default-features = false, features = ["rt"] }
-trust-dns-resolver = { version = "0.22", default-features = false, features = ["tokio-runtime"] }
+trust-dns-resolver = { version = "0.23.0", default-features = false }
 
 # Rustls
-hyper-rustls = { version = "0.24", default-features = false, features = ["tokio-runtime"], optional = true }
+hyper-rustls = { version = "0.24", default-features = false, optional = true }
 
 # Native-TLS
 hyper-tls = { version = "0.5", default-features = false, optional = true }
@@ -28,8 +25,11 @@ hyper-rustls = { version = "0.24", default-features = false, features = ["tokio-
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 
 [features]
-default = ["https-only", "rustls-webpki", "rustls-http1"]
+default = ["https-only", "rustls-webpki", "rustls-http1", "tokio"]
 https-only = []
+
+# Tokio feature
+tokio = ["trust-dns-resolver/tokio-runtime", "hyper-rustls?/tokio-runtime"]
 
 # Configuration features
 system-config = ["trust-dns-resolver/system-config"]
