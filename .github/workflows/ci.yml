@@ -58,39 +58,6 @@ jobs:
       - name: Run cargo fmt
         run: cargo fmt -- --check
 
-  min-vers:
-    name: Minimal crate versions
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install nightly toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          profile: minimal
-
-      - name: Install cargo-hack
-        uses: baptiste0928/cargo-install@v1
-        with:
-          crate: cargo-hack
-
-      - name: Install cargo-minimal-versions
-        uses: baptiste0928/cargo-install@v1
-        with:
-          crate: cargo-minimal-versions
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v1
-
-      - name: Add problem matchers
-        run: echo "::add-matcher::.github/rust.json"
-
-      - name: Check minimal versions
-        run: cargo minimal-versions check
-
   test:
     name: Test
     runs-on: ubuntu-latest

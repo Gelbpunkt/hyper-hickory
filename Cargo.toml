@@ -1,16 +1,16 @@
 [package]
-name = "hyper-trust-dns"
-version = "0.5.0"
+name = "hyper-hickory"
+version = "0.6.0"
 edition = "2021"
-description = "HTTP/HTTPS connectors for hyper that use trust-dns' DNS resolver"
+description = "HTTP/HTTPS connectors for hyper that use hickory's DNS resolver"
 license = "MIT"
-documentation = "https://docs.rs/hyper-trust-dns"
-homepage = "https://github.com/Gelbpunkt/hyper-trust-dns"
-repository = "https://github.com/Gelbpunkt/hyper-trust-dns"
+documentation = "https://docs.rs/hyper-hickory"
+homepage = "https://github.com/Gelbpunkt/hyper-hickory"
+repository = "https://github.com/Gelbpunkt/hyper-hickory"
 
 [dependencies]
 hyper = { version = "0.14", default-features = false, features = ["client", "runtime", "tcp"] }
-trust-dns-resolver = { version = "0.23.0", default-features = false }
+hickory-resolver = { version = "0.24", default-features = false }
 
 # Rustls
 hyper-rustls = { version = "0.24", default-features = false, optional = true }
@@ -19,7 +19,7 @@ hyper-rustls = { version = "0.24", default-features = false, optional = true }
 hyper-tls = { version = "0.5", default-features = false, optional = true }
 
 [dev-dependencies]
-criterion = { version = "0.4", features = ["async_tokio"] }
+criterion = { version = "0.5", features = ["async_tokio"] }
 hyper = { version = "0.14", default-features = false, features = ["client", "tcp", "http1", "http2"] }
 hyper-rustls = { version = "0.24", default-features = false, features = ["tokio-runtime", "webpki-tokio", "http1", "http2"] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
@@ -29,30 +29,31 @@ default = ["https-only", "rustls-webpki", "rustls-http1", "tokio"]
 https-only = []
 
 # Tokio feature
-tokio = ["trust-dns-resolver/tokio-runtime", "hyper-rustls?/tokio-runtime"]
+tokio = ["hickory-resolver/tokio-runtime", "hyper-rustls?/tokio-runtime"]
 
 # Configuration features
-system-config = ["trust-dns-resolver/system-config"]
+system-config = ["hickory-resolver/system-config"]
 
 # DNS features
-dns-over-openssl = ["trust-dns-resolver/dns-over-openssl"]
-dns-over-native-tls = ["trust-dns-resolver/dns-over-native-tls"]
-dns-over-rustls = ["trust-dns-resolver/dns-over-rustls"]
+dns-over-openssl = ["hickory-resolver/dns-over-openssl"]
+dns-over-native-tls = ["hickory-resolver/dns-over-native-tls"]
+dns-over-rustls = ["hickory-resolver/dns-over-rustls"]
 
-dns-over-https-rustls = ["trust-dns-resolver/dns-over-https-rustls"]
+dns-over-https-rustls = ["hickory-resolver/dns-over-https-rustls"]
 
-dnssec-openssl = ["trust-dns-resolver/dnssec-openssl"]
-dnssec-ring = ["trust-dns-resolver/dnssec-ring"]
+dnssec-openssl = ["hickory-resolver/dnssec-openssl"]
+dnssec-ring = ["hickory-resolver/dnssec-ring"]
 
 # RustlsHttpsConnector options
-rustls-webpki = ["hyper-rustls", "hyper-rustls/webpki-tokio"]
-rustls-native = ["hyper-rustls", "hyper-rustls/native-tokio"]
+hyper-rustls = ["dep:hyper-rustls"]
+rustls-webpki = ["hyper-rustls?/webpki-tokio", "hickory-resolver/webpki-roots"]
+rustls-native = ["hyper-rustls?/native-tokio", "hickory-resolver/native-certs"]
 rustls-http1 = ["hyper-rustls/http1"]
 rustls-http2 = ["hyper-rustls/http2"]
 rustls-tls-12 = ["hyper-rustls/tls12"]
 
 # NativeTlsHttpsConnector options
-native-tls = ["hyper-tls"]
+native-tls = ["dep:hyper-tls"]
 
 [[bench]]
 name = "requests_per_sec"

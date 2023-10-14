@@ -15,7 +15,7 @@ async fn hyper_threadpool_request(
     assert_eq!(response.status(), 200);
 }
 
-async fn hyper_trust_dns_request(client: Client<hyper_trust_dns::RustlsHttpsConnector>) {
+async fn hyper_hickory_request(client: Client<hyper_hickory::TokioRustlsHttpsConnector>) {
     let request = Request::builder()
         .method("GET")
         .uri("https://travitia.xyz/")
@@ -49,24 +49,24 @@ fn hyper_threadpool(c: &mut Criterion) {
     );
 }
 
-fn hyper_trust_dns(c: &mut Criterion) {
+fn hyper_hickory(c: &mut Criterion) {
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .unwrap();
 
     let https_connector =
-        hyper_trust_dns::TokioTrustDnsResolver::new().into_rustls_webpki_https_connector();
+        hyper_hickory::TokioHickoryResolver::new().into_rustls_webpki_https_connector();
     let client: Client<_> = Client::builder().build(https_connector);
 
     c.bench_with_input(
-        BenchmarkId::new("hyper_trust_dns", "Client"),
+        BenchmarkId::new("hyper_hickory", "Client"),
         &client,
         |b, c| {
-            b.to_async(&rt).iter(|| hyper_trust_dns_request(c.clone()));
+            b.to_async(&rt).iter(|| hyper_hickory_request(c.clone()));
         },
     );
 }
 
-criterion_group!(benches, hyper_trust_dns, hyper_threadpool);
+criterion_group!(benches, hyper_hickory, hyper_threadpool);
 criterion_main!(benches);

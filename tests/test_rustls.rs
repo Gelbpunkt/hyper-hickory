@@ -1,11 +1,11 @@
 mod tests {
     use hyper::{Body, Client, Request};
-    use hyper_trust_dns::TokioTrustDnsResolver;
+    use hyper_hickory::TokioHickoryResolver;
 
     #[cfg(feature = "rustls-webpki")]
     #[tokio::test]
     async fn test_rustls_webpki_roots_works() {
-        let connector = TokioTrustDnsResolver::default().into_rustls_webpki_https_connector();
+        let connector = TokioHickoryResolver::default().into_rustls_webpki_https_connector();
         let client = Client::builder().build(connector);
 
         let request = Request::builder()
@@ -22,7 +22,7 @@ mod tests {
     #[cfg(feature = "rustls-native")]
     #[tokio::test]
     async fn test_rustls_native_roots_works() {
-        let connector = TokioTrustDnsResolver::default().into_rustls_native_https_connector();
+        let connector = TokioHickoryResolver::default().into_rustls_native_https_connector();
         let client = Client::builder().build(connector);
 
         let request = Request::builder()
@@ -40,7 +40,7 @@ mod tests {
     #[tokio::test]
     async fn test_sytem_config_works() {
         let connector =
-            TokioTrustDnsResolver::from_system_conf().into_rustls_native_https_connector();
+            TokioHickoryResolver::from_system_conf().into_rustls_native_https_connector();
         let client = Client::builder().build(connector);
 
         let request = Request::builder()
@@ -57,8 +57,7 @@ mod tests {
     #[cfg(all(feature = "dns-over-rustls", feature = "rustls-native"))]
     #[tokio::test]
     async fn test_dns_over_rustls_works() {
-        let connector =
-            TokioTrustDnsResolver::cloudflare_tls().into_rustls_native_https_connector();
+        let connector = TokioHickoryResolver::cloudflare_tls().into_rustls_native_https_connector();
         let client = Client::builder().build(connector);
 
         let request = Request::builder()
@@ -76,7 +75,7 @@ mod tests {
     #[tokio::test]
     async fn test_dns_over_https_rustls_works() {
         let connector =
-            TokioTrustDnsResolver::cloudflare_https().into_rustls_native_https_connector();
+            TokioHickoryResolver::cloudflare_https().into_rustls_native_https_connector();
         let client = Client::builder().build(connector);
 
         let request = Request::builder()
