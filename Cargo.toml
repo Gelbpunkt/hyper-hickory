@@ -9,7 +9,7 @@ homepage = "https://github.com/Gelbpunkt/hyper-hickory"
 repository = "https://github.com/Gelbpunkt/hyper-hickory"
 
 [dependencies]
-hyper = { version = "0.14", default-features = false, features = ["client", "runtime", "tcp"] }
+hyper = { version = "1.0", default-features = false, features = ["client", "runtime", "tcp"] }
 hickory-resolver = { version = "0.24", default-features = false }
 
 # Rustls
@@ -20,7 +20,7 @@ hyper-tls = { version = "0.5", default-features = false, optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["async_tokio"] }
-hyper = { version = "0.14", default-features = false, features = ["client", "tcp", "http1", "http2"] }
+hyper = { version = "1.0", default-features = false, features = ["client", "tcp", "http1", "http2"] }
 hyper-rustls = { version = "0.24", default-features = false, features = ["tokio-runtime", "webpki-tokio", "http1", "http2"] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 
