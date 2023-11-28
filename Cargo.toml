@@ -16,7 +16,7 @@ hickory-resolver = { version = "0.24", default-features = false }
 hyper-rustls = { version = "0.24", default-features = false, optional = true }
 
 # Native-TLS
-hyper-tls = { version = "0.5", default-features = false, optional = true }
+hyper-tls = { version = "0.6", default-features = false, optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["async_tokio"] }
