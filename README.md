@@ -1,37 +1,32 @@
 # hyper-hickory
 
-This crate provides HTTP/HTTPS connectors for [hyper](https://github.com/hyperium/hyper) that use the fast and advanced DNS resolver of [hickory](https://github.com/hickory-dns/hickory-dns) instead of the default threadpool implementation of hyper.
+This crate provides a HTTP connector for [hyper](https://github.com/hyperium/hyper) that uses the fast and advanced DNS resolver of [hickory](https://github.com/hickory-dns/hickory-dns) instead of the default threadpool implementation of hyper.
 
 ## Usage
 
 ```rust
-use hyper::Client;
+use http_body_util::Full; // Or your preferred Body implementation
+use hyper::body::Bytes;
 use hyper_hickory::HickoryResolver;
+use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 
-let connector = HickoryResolver::default().into_rustls_webpki_https_connector();
-let client: Client<_> = Client::builder().build(connector);
+let connector = HickoryResolver::default().into_http_connector();
+let client: Client<_, Full<Bytes>> = Client::builder(TokioExecutor::new()).build(connector);
 ```
 
 ## Resolvers
 
 There is a [`HickoryResolver`] resolver which can be built from an [`AsyncResolver`] using [`HickoryResolver::from_async_resolver`].
 
-For most cases where you are happy to use the standard [`TokioRuntimeProvider`](https://docs.rs/hickory-resolver/latest/hickory_resolver/name_server/struct.TokioRuntimeProvider.html), the [`TokioHickoryResolver`] should be used and is able to be built much more easily
-(but requires the `tokio` feature to be enabled, which it is by default).
+For most cases where you are happy to use the standard [`TokioRuntimeProvider`](https://docs.rs/hickory-resolver/latest/hickory_resolver/name_server/struct.TokioRuntimeProvider.html), the [`TokioHickoryResolver`] should be used and is able to be built much more easily.
 
 
 ## Types of connectors
 
-There are 6 connectors:
+There are 2 connectors:
 
-- [`HickoryHttpConnector`], a wrapper around [`HttpConnector<HickoryResolver>`]. Created with [`HickoryResolver::into_http_connector`].
-- [`RustlsHttpsConnector`], a [hyper-rustls](https://github.com/rustls/hyper-rustls) based connector to work with [`HickoryHttpConnector`]. Created with [`HickoryResolver::into_rustls_native_https_connector`] or [`HickoryResolver::into_rustls_webpki_https_connector`].
-- [`NativeTlsHttpsConnector`], a [hyper-tls](https://github.com/hyperium/hyper-tls) based connector to work with [`HickoryHttpConnector`]. Created with [`HickoryResolver::into_native_tls_https_connector`].
-- [`TokioHickoryHttpConnector`], a wrapper around [`HickoryHttpConnector<TokioRuntimeProvider>`].
-- [`TokioNativeTlsHttpsConnector`], a wrapper around [`NativeTlsHttpsConnector<TokioRuntimeProvider>`]
-- [`TokioRustlsHttpsConnector`], a wrapper around [`RustlsHttpsConnector<TokioRuntimeProvider>`]
-
-The HTTP connector is always available, the other two non-tokio ones can be enabled via the `hyper-rustls` feature combined with `rustls-webpki` (uses webpki roots)/`rustls-native` (uses OS cert store) and `native-tls` features respectably. The `Tokio` prefixed variants also require the `tokio` feature to be enabled (which it is by default).
+- [`HickoryHttpConnector<C>`], a wrapper around [`HttpConnector<HickoryResolver<C>>`]. Created with [`HickoryResolver::into_http_connector`].
+- [`TokioHickoryHttpConnector`], an alias to [`HickoryHttpConnector<TokioConnectionProvider>`].
 
 ## Hickory options
 

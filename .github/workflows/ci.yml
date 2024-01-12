@@ -105,6 +105,4 @@ jobs:
           cargo hack check \
             --feature-powerset \
             --no-dev-deps \
-            --skip dnssec-openssl,dnssec-ring,rustls-tls-12 \
-            --group-features rustls-native,rustls-http1,rustls-http2 \
-            --group-features rustls-webpki,rustls-http1,rustls-http2
+            --skip dnssec-openssl,dnssec-ring

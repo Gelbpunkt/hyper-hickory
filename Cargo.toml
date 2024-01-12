@@ -1,35 +1,27 @@
 [package]
 name = "hyper-hickory"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
-description = "HTTP/HTTPS connectors for hyper that use hickory's DNS resolver"
+description = "HTTP connector for hyper that uses hickory's DNS resolver"
 license = "MIT"
 documentation = "https://docs.rs/hyper-hickory"
 homepage = "https://github.com/Gelbpunkt/hyper-hickory"
 repository = "https://github.com/Gelbpunkt/hyper-hickory"
 
 [dependencies]
-hyper = { version = "0.14", default-features = false, features = ["client", "runtime", "tcp"] }
-hickory-resolver = { version = "0.24", default-features = false }
-
-# Rustls
-hyper-rustls = { version = "0.24", default-features = false, optional = true }
-
-# Native-TLS
-hyper-tls = { version = "0.5", default-features = false, optional = true }
+hyper-util  = { version = "0.1", default-features = false, features = ["client", "client-legacy", "tokio"] }
+hickory-resolver = { version = "0.24", default-features = false, features = ["tokio-runtime"] }
+tower-service = "0.3"
 
 [dev-dependencies]
-criterion = { version = "0.5", features = ["async_tokio"] }
-hyper = { version = "0.14", default-features = false, features = ["client", "tcp", "http1", "http2"] }
-hyper-rustls = { version = "0.24", default-features = false, features = ["tokio-runtime", "webpki-tokio", "http1", "http2"] }
+http = "1"
+http-body-util = "0.1"
+hyper = "1"
+hyper-util  = { version = "0.1", default-features = false, features = ["client", "client-legacy", "http1", "tokio"] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 
 [features]
-default = ["https-only", "rustls-webpki", "rustls-http1", "tokio"]
-https-only = []
-
-# Tokio feature
-tokio = ["hickory-resolver/tokio-runtime", "hyper-rustls?/tokio-runtime"]
+default = []
 
 # Configuration features
 system-config = ["hickory-resolver/system-config"]
@@ -43,22 +35,6 @@ dns-over-https-rustls = ["hickory-resolver/dns-over-https-rustls"]
 
 dnssec-openssl = ["hickory-resolver/dnssec-openssl"]
 dnssec-ring = ["hickory-resolver/dnssec-ring"]
-
-# RustlsHttpsConnector options
-hyper-rustls = ["dep:hyper-rustls"]
-rustls-webpki = ["hyper-rustls?/webpki-tokio", "hickory-resolver/webpki-roots"]
-rustls-native = ["hyper-rustls?/native-tokio", "hickory-resolver/native-certs"]
-rustls-http1 = ["hyper-rustls/http1"]
-rustls-http2 = ["hyper-rustls/http2"]
-rustls-tls-12 = ["hyper-rustls/tls12"]
-
-# NativeTlsHttpsConnector options
-native-tls = ["dep:hyper-tls"]
-
-[[bench]]
-name = "requests_per_sec"
-harness = false
-path = "benches/requests_per_sec.rs"
 
 [package.metadata.docs.rs]
 all-features = true

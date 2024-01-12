@@ -1,18 +1,18 @@
-use hyper::{Body, Client, Request};
+use http::Uri;
+use http_body_util::Empty;
+use hyper::body::Bytes;
 use hyper_hickory::TokioHickoryResolver;
+use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 
 #[tokio::test]
 async fn test_lookup_works() {
     let connector = TokioHickoryResolver::default().into_http_connector();
-    let client = Client::builder().build(connector);
+    let client: Client<_, Empty<Bytes>> = Client::builder(TokioExecutor::new()).build(connector);
 
-    let request = Request::builder()
-        .method("GET")
-        .uri("http://example.com/")
-        .body(Body::empty())
+    let response = client
+        .get(Uri::from_static("http://example.com/"))
+        .await
         .unwrap();
-
-    let response = client.request(request).await.unwrap();
 
     assert_eq!(response.status(), 200);
 }
