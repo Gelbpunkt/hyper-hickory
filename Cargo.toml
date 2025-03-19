@@ -10,7 +10,7 @@ repository = "https://github.com/Gelbpunkt/hyper-hickory"
 
 [dependencies]
 hyper-util  = { version = "0.1", default-features = false, features = ["client", "client-legacy", "tokio"] }
-hickory-resolver = { version = "0.24", default-features = false, features = ["tokio-runtime"] }
+hickory-resolver = { version = "0.25", default-features = false, features = ["tokio-runtime"] }
 tower-service = "0.3"
 
 [dev-dependencies]
