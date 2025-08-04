@@ -1,6 +1,6 @@
 [package]
 name = "hyper-hickory"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 description = "HTTP connector for hyper that uses hickory's DNS resolver"
 license = "MIT"
@@ -9,15 +9,22 @@ homepage = "https://github.com/Gelbpunkt/hyper-hickory"
 repository = "https://github.com/Gelbpunkt/hyper-hickory"
 
 [dependencies]
-hyper-util  = { version = "0.1", default-features = false, features = ["client", "client-legacy", "tokio"] }
-hickory-resolver = { version = "0.24", default-features = false, features = ["tokio-runtime"] }
+hyper-util = { version = "0.1", default-features = false, features = [
+    "client",
+    "client-legacy",
+] }
+hickory-resolver = { version = "0.25", default-features = false }
 tower-service = "0.3"
 
 [dev-dependencies]
 http = "1"
 http-body-util = "0.1"
 hyper = "1"
-hyper-util  = { version = "0.1", default-features = false, features = ["client", "client-legacy", "http1", "tokio"] }
+hyper-util = { version = "0.1", default-features = false, features = [
+    "client",
+    "client-legacy",
+    "http1",
+] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 
 [features]
@@ -27,14 +34,22 @@ default = []
 system-config = ["hickory-resolver/system-config"]
 
 # DNS features
-dns-over-openssl = ["hickory-resolver/dns-over-openssl"]
-dns-over-native-tls = ["hickory-resolver/dns-over-native-tls"]
-dns-over-rustls = ["hickory-resolver/dns-over-rustls"]
+tls-aws-lc-rs = ["hickory-resolver/tls-aws-lc-rs"]
+https-aws-lc-rs = ["hickory-resolver/https-aws-lc-rs"]
+quic-aws-lc-rs = ["hickory-resolver/quic-aws-lc-rs"]
+h3-aws-lc-rs = ["hickory-resolver/h3-aws-lc-rs"]
 
-dns-over-https-rustls = ["hickory-resolver/dns-over-https-rustls"]
+tls-ring = ["hickory-resolver/tls-ring"]
+https-ring = ["hickory-resolver/https-ring"]
+quic-ring = ["hickory-resolver/quic-ring"]
 
-dnssec-openssl = ["hickory-resolver/dnssec-openssl"]
+webpki-roots = ["hickory-resolver/webpki-roots"]
+rustls-platform-verifier = ["hickory-resolver/rustls-platform-verifier"]
+
+dnssec-aws-lc-rs = ["hickory-resolver/dnssec-aws-lc-rs"]
 dnssec-ring = ["hickory-resolver/dnssec-ring"]
+
+tokio = ["hickory-resolver/tokio", "hyper-util/tokio"]
 
 [package.metadata.docs.rs]
 all-features = true

@@ -11,26 +11,25 @@ use std::{
     task::{self, Poll},
 };
 
+#[cfg(feature = "tokio")]
 use hickory_resolver::{
-    error::ResolveError, lookup_ip::LookupIpIntoIter, name_server::ConnectionProvider,
-    AsyncResolver,
+    config::ResolverConfig, config::ResolverOpts, name_server::TokioConnectionProvider,
+    proto::runtime::TokioRuntimeProvider, TokioResolver,
 };
-
 use hickory_resolver::{
-    config::{ResolverConfig, ResolverOpts},
-    name_server::TokioConnectionProvider,
-    TokioAsyncResolver,
+    lookup_ip::LookupIpIntoIter, name_server::ConnectionProvider, ResolveError, Resolver,
 };
 use hyper_util::client::legacy::connect::{dns::Name, HttpConnector};
 use tower_service::Service;
 
-/// A hyper resolver using `hickory`'s [`TokioAsyncResolver`].
+/// A hyper resolver using `hickory`'s [`TokioResolver`].
+#[cfg(feature = "tokio")]
 pub type TokioHickoryResolver = HickoryResolver<TokioConnectionProvider>;
 
-/// A hyper resolver using `hickory`'s [`AsyncResolver`] and any implementor of [`ConnectionProvider`].
+/// A hyper resolver using `hickory`'s [`Resolver`] and any implementor of [`ConnectionProvider`].
 #[derive(Clone)]
 pub struct HickoryResolver<C: ConnectionProvider> {
-    resolver: Arc<AsyncResolver<C>>,
+    resolver: Arc<Resolver<C>>,
 }
 
 /// Iterator over DNS lookup results.
@@ -48,13 +47,14 @@ impl Iterator for SocketAddrs {
 
 /// Get the default resolver options as configured per crate features.
 /// This allows us to enable DNSSEC conditionally.
+#[cfg(feature = "tokio")]
 fn default_opts() -> ResolverOpts {
-    #[cfg(any(feature = "dnssec-openssl", feature = "dnssec-ring"))]
+    #[cfg(any(feature = "dnssec-aws-lc-rs", feature = "dnssec-ring"))]
     let mut opts = ResolverOpts::default();
-    #[cfg(not(any(feature = "dnssec-openssl", feature = "dnssec-ring")))]
+    #[cfg(not(any(feature = "dnssec-aws-lc-rs", feature = "dnssec-ring")))]
     let opts = ResolverOpts::default();
 
-    #[cfg(any(feature = "dnssec-openssl", feature = "dnssec-ring"))]
+    #[cfg(any(feature = "dnssec-aws-lc-rs", feature = "dnssec-ring"))]
     {
         opts.validate = true;
     }
@@ -62,6 +62,7 @@ fn default_opts() -> ResolverOpts {
     opts
 }
 
+#[cfg(feature = "tokio")]
 impl TokioHickoryResolver {
     /// Create a new [`TokioHickoryResolver`] with the default config options.
     /// This must be run inside a Tokio runtime context.
@@ -87,7 +88,7 @@ impl TokioHickoryResolver {
     /// Create a new [`TokioHickoryResolver`] that uses the Cloudflare nameservers.
     /// This limits the registered connections to just HTTPS lookups.
     /// This must be run inside a Tokio runtime context.
-    #[cfg(feature = "dns-over-https-rustls")]
+    #[cfg(any(feature = "https-aws-lc-rs", feature = "https-ring"))]
     #[must_use]
     pub fn cloudflare_https() -> Self {
         Self::with_config_and_options(ResolverConfig::cloudflare_https(), default_opts())
@@ -96,11 +97,7 @@ impl TokioHickoryResolver {
     /// Create a new [`TokioHickoryResolver`] that uses the Cloudflare nameservers.
     /// This limits the registered connections to just TLS lookups.
     /// This must be run inside a Tokio runtime context.
-    #[cfg(any(
-        feature = "dns-over-rustls",
-        feature = "dns-over-native-tls",
-        feature = "dns-over-openssl"
-    ))]
+    #[cfg(any(feature = "tls-aws-lc-rs", feature = "tls-ring",))]
     #[must_use]
     pub fn cloudflare_tls() -> Self {
         Self::with_config_and_options(ResolverConfig::cloudflare_tls(), default_opts())
@@ -116,7 +113,7 @@ impl TokioHickoryResolver {
     /// Create a new [`TokioHickoryResolver`] that uses the Quad9 nameservers.
     /// This limits the registered connections to just HTTPS lookups.
     /// This must be run inside a Tokio runtime context.
-    #[cfg(feature = "dns-over-https-rustls")]
+    #[cfg(any(feature = "https-aws-lc-rs", feature = "https-ring"))]
     #[must_use]
     pub fn quad9_https() -> Self {
         Self::with_config_and_options(ResolverConfig::quad9_https(), default_opts())
@@ -125,11 +122,7 @@ impl TokioHickoryResolver {
     /// Create a new [`TokioHickoryResolver`] that uses the Quad9 nameservers.
     /// This limits the registered connections to just TLS lookups.
     /// This must be run inside a Tokio runtime context.
-    #[cfg(any(
-        feature = "dns-over-rustls",
-        feature = "dns-over-native-tls",
-        feature = "dns-over-openssl"
-    ))]
+    #[cfg(any(feature = "tls-aws-lc-rs", feature = "tls-ring",))]
     #[must_use]
     pub fn quad9_tls() -> Self {
         Self::with_config_and_options(ResolverConfig::quad9_tls(), default_opts())
@@ -140,7 +133,14 @@ impl TokioHickoryResolver {
     /// This must be run inside a Tokio runtime context.
     #[must_use]
     pub fn with_config_and_options(config: ResolverConfig, options: ResolverOpts) -> Self {
-        Self::from_async_resolver(TokioAsyncResolver::tokio(config, options))
+        Self::from_resolver(
+            TokioResolver::builder_with_config(
+                config,
+                TokioConnectionProvider::new(TokioRuntimeProvider::new()),
+            )
+            .with_options(options)
+            .build(),
+        )
     }
 
     /// Create a new [`TokioHickoryResolver`] with the system configuration.
@@ -150,13 +150,12 @@ impl TokioHickoryResolver {
     ///
     /// This method returns an error if loading the system configuration fails.
     #[cfg(feature = "system-config")]
-    pub fn from_system_conf() -> Result<Self, hickory_resolver::error::ResolveError> {
-        Ok(Self::from_async_resolver(
-            TokioAsyncResolver::tokio_from_system_conf()?,
-        ))
+    pub fn from_system_conf() -> Result<Self, ResolveError> {
+        Ok(Self::from_resolver(TokioResolver::builder_tokio()?.build()))
     }
 }
 
+#[cfg(feature = "tokio")]
 impl Default for TokioHickoryResolver {
     fn default() -> Self {
         Self::with_config_and_options(ResolverConfig::default(), default_opts())
@@ -164,10 +163,10 @@ impl Default for TokioHickoryResolver {
 }
 
 impl<C: ConnectionProvider> HickoryResolver<C> {
-    /// Create a [`HickoryResolver`] from the given [`AsyncResolver`]
+    /// Create a [`HickoryResolver`] from the given [`Resolver`].
     #[must_use]
-    pub fn from_async_resolver(async_resolver: AsyncResolver<C>) -> Self {
-        let resolver = Arc::new(async_resolver);
+    pub fn from_resolver(resolver: Resolver<C>) -> Self {
+        let resolver = Arc::new(resolver);
 
         Self { resolver }
     }
@@ -205,4 +204,5 @@ impl<C: ConnectionProvider> Service<Name> for HickoryResolver<C> {
 pub type HickoryHttpConnector<C> = HttpConnector<HickoryResolver<C>>;
 
 /// A [`HttpConnector`] that uses the [`TokioHickoryResolver`].
+#[cfg(feature = "tokio")]
 pub type TokioHickoryHttpConnector = HickoryHttpConnector<TokioConnectionProvider>;

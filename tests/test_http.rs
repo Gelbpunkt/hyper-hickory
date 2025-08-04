@@ -1,3 +1,5 @@
+#![cfg(feature = "tokio")]
+
 use http::Uri;
 use http_body_util::Empty;
 use hyper::body::Bytes;
