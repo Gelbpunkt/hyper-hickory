@@ -1,6 +1,6 @@
 [package]
 name = "hyper-hickory"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2021"
 description = "HTTP connector for hyper that uses hickory's DNS resolver"
 license = "MIT"
@@ -9,23 +9,23 @@ homepage = "https://github.com/Gelbpunkt/hyper-hickory"
 repository = "https://github.com/Gelbpunkt/hyper-hickory"
 
 [dependencies]
-hyper-util = { version = "0.1", default-features = false, features = [
+hyper-util = { version = "0.1.21", default-features = false, features = [
     "client",
     "client-legacy",
 ] }
-hickory-resolver = { version = "0.25", default-features = false }
-tower-service = "0.3"
+hickory-resolver = { version = "0.26.3", default-features = false }
+tower-service = "0.3.3"
 
 [dev-dependencies]
-http = "1"
-http-body-util = "0.1"
-hyper = "1"
-hyper-util = { version = "0.1", default-features = false, features = [
+http = "1.5.0"
+http-body-util = "0.1.5"
+hyper = "1.12.0"
+hyper-util = { version = "0.1.21", default-features = false, features = [
     "client",
     "client-legacy",
     "http1",
 ] }
-tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
+tokio = { version = "1.53.3", default-features = false, features = ["rt", "macros"] }
 
 [features]
 default = []
